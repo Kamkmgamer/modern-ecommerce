@@ -1,24 +1,13 @@
 // src/pages/ProductDetailPage.tsx
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
-  const [activeFeature, setActiveFeature] = useState(0);
-  const { scrollYProgress } = useScroll();
 
-  // Parallax transforms for sticky section
-  const imageScale = useSpring(
-    useTransform(scrollYProgress, [0, 0.3], [1, 1.1]),
-    { stiffness: 80, damping: 15 }
-  );
-  const imageX = useTransform(scrollYProgress, [0, 0.5], ['0%', '20%']);
-  const textY = useTransform(scrollYProgress, [0, 0.5], [50, -20]);
-  const textOpacity = useTransform(scrollYProgress, [0, 0.2], [0, 1]);
-
-  // Product data
+  // Main product data
   const product = {
     name: `Product ${productId}`,
     price: 999.99,
@@ -30,6 +19,7 @@ const ProductDetailPage: React.FC = () => {
     bgImage: `https://picsum.photos/seed/${productId}-bg/1600/900`,
   };
 
+  // Feature images
   const features = [
     {
       title: 'Ultra-Wide Display',
@@ -53,11 +43,22 @@ const ProductDetailPage: React.FC = () => {
     },
   ];
 
+  // Fly-in gallery
   const gallery = Array.from({ length: 6 }).map((_, i) => ({
     id: i,
     src: `https://picsum.photos/seed/${productId}-gal${i}/400/300`,
     hoverSrc: `https://picsum.photos/seed/${productId}-gal${i}-alt/400/300`,
   }));
+
+  const { scrollYProgress } = useScroll();
+
+  const sectionStart = 0.2;
+  const sectionEnd = 0.8;
+  const imageOpacity = useTransform(
+    scrollYProgress,
+    [sectionStart, sectionEnd],
+    [1, 0]
+  );
 
   const handleAddToCart = () => {
     console.log(`Added product ${productId} to cart`);
@@ -87,63 +88,57 @@ const ProductDetailPage: React.FC = () => {
         </motion.div>
         <div className="absolute inset-0 bg-black/40" />
       </section>
-{/* STICKY FEATURES with Image Inside Card */}
-<section
-  className="relative bg-cover bg-center"
-  style={{ backgroundImage: `url(${product.bgImage})` }}
->
-  <div className="min-h-[400vh] relative">
-    {/* Sticky container */}
-    <div className="sticky top-0 h-screen flex justify-center items-center">
-      {features.map((feat, idx) => (
-        <motion.div
-          key={idx}
-          className="absolute max-w-lg w-full rounded-3xl shadow-2xl bg-black/30 backdrop-blur-sm overflow-hidden"
-          style={{ scale: imageScale, x: imageX }}
-          initial={{ opacity: 0 }}
-          animate={{
-            opacity: activeFeature === idx ? 1 : 0,
-            transition: { duration: 0.8, ease: 'easeInOut' },
-          }}
-        >
-          {/* Image inside card */}
-          <img
-            src={feat.imageUrl}
-            alt={feat.title}
-            className="w-full object-cover rounded-t-3xl"
-            style={{ height: '400px' }}
-          />
 
-          {/* Text content below image */}
-          <motion.div
-            style={{ y: textY, opacity: textOpacity }}
-            className="p-6 text-center"
-          >
-            <h3 className="text-3xl md:text-4xl font-semibold text-white mb-2">
-              {feat.title}
-            </h3>
-            <p className="text-lg md:text-xl text-gray-200">
-              {feat.desc}
-            </p>
-          </motion.div>
-        </motion.div>
-      ))}
-    </div>
+      {/* Sticky Feature Section with Fade */}
+      <section
+        className="relative bg-cover bg-center"
+        style={{ backgroundImage: `url(${product.bgImage})` }}
+      >
+        <div className="min-h-[400vh] relative">
+          <div className="sticky top-0 h-screen flex justify-center items-center">
+            {features.map((feat, idx) => (
+              <motion.div
+                key={idx}
+                style={{
+                  opacity: useTransform(
+                    scrollYProgress,
+                    [
+                      sectionStart + idx * 0.15,
+                      sectionStart + (idx + 1) * 0.15,
+                    ],
+                    [1, 0]
+                  ),
+                  scale: useTransform(
+                    scrollYProgress,
+                    [
+                      sectionStart + idx * 0.15,
+                      sectionStart + (idx + 1) * 0.15,
+                    ],
+                    [1, 1.1]
+                  ),
+                }}
+                className="absolute flex flex-col items-center"
+              >
+                <img
+                  src={feat.imageUrl}
+                  alt={feat.title}
+                  className="rounded-3xl shadow-2xl w-4/5 md:w-3/5 lg:w-2/5"
+                />
+                <div className="mt-6 text-center bg-black/30 rounded-2xl p-4 backdrop-blur-md">
+                  <h3 className="text-3xl md:text-4xl font-semibold text-white mb-2">
+                    {feat.title}
+                  </h3>
+                  <p className="text-lg md:text-xl text-gray-200 max-w-lg">
+                    {feat.desc}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-    {/* Invisible anchors to auto-set activeFeature */}
-    <div className="absolute top-0 left-0 w-full h-full">
-      {features.map((_, idx) => (
-        <motion.div
-          key={idx}
-          className="h-[100vh] w-full"
-          onViewportEnter={() => setActiveFeature(idx)}
-        />
-      ))}
-    </div>
-  </div>
-</section>
-
-      {/* HORIZONTAL SWIPE GALLERY */}
+      {/* Horizontal Swipe Gallery */}
       <section className="py-16 bg-gray-100 overflow-x-auto">
         <div className="flex space-x-6 px-6">
           {features.map((feat, idx) => (
@@ -166,7 +161,7 @@ const ProductDetailPage: React.FC = () => {
         </div>
       </section>
 
-      {/* FLY-IN GRID GALLERY with FADE HOVER */}
+      {/* Fly-In Grid Gallery */}
       <section className="py-24 bg-white">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto px-4">
           {gallery.map((img) => (
@@ -176,26 +171,21 @@ const ProductDetailPage: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.8, delay: img.id * 0.2 }}
-              className="relative overflow-hidden rounded-xl shadow-lg group"
+              className="relative overflow-hidden rounded-xl shadow-lg"
             >
-              {/* Base image */}
               <img
                 src={img.src}
                 alt={`Gallery ${img.id}`}
-                className="object-cover w-full h-64 transition-opacity duration-500 group-hover:opacity-0"
-              />
-              {/* Hover image */}
-              <img
-                src={img.hoverSrc}
-                alt={`Gallery ${img.id} alternate`}
-                className="absolute inset-0 object-cover w-full h-64 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                className="object-cover w-full h-64 transition-transform duration-300 hover:scale-105"
+                onMouseEnter={(e) => (e.currentTarget.src = img.hoverSrc)}
+                onMouseLeave={(e) => (e.currentTarget.src = img.src)}
               />
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* CALL TO ACTION */}
+      {/* Call to Action */}
       <section className="py-32 text-center bg-gray-50">
         <motion.h3
           initial={{ opacity: 0, y: 30 }}
