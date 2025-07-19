@@ -1,96 +1,107 @@
-// src/pages/HomePage.tsx
+// src/pages/CartPage.tsx
 import React from 'react';
-import ProductCard from '../components/ProductCard';
-import PageTransition from '../components/PageTransition';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { useCartStore } from '../store/cartStore';
+import { motion } from 'framer-motion';
+import { Minus, Plus, Trash } from 'lucide-react';
 
-// Dummy data
-const products = Array.from({ length: 8 }, (_, i) => ({
-  id: i + 1,
-  name: `Modern Widget ${i + 1}`,
-  price: 29.99 + i * 10,
-  imageUrl: `https://picsum.photos/seed/${i + 547}/400/300`,
-}));
+const CartPage: React.FC = () => {
+  const items = useCartStore((state) => state.items);
+  const removeFromCart = useCartStore((state) => state.removeFromCart);
+  const increaseQty = useCartStore((state) => state.increaseQuantity);
+  const decreaseQty = useCartStore((state) => state.decreaseQuantity);
 
-const HomePage: React.FC = () => {
-  const { scrollY } = useScroll();
-
-  // Parallax effect: background y position changes slower than scroll
-  const backgroundY = useTransform(scrollY, [0, 500], [0, -150]);
+  const totalPrice = items.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
 
   return (
-    <PageTransition>
-      <div className="bg-gradient-to-b from-gray-50 to-gray-100 text-gray-900">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <h1 className="text-4xl font-bold text-center mb-10">Your Shopping Bag</h1>
 
-        {/* HERO */}
-        <section className="relative h-screen flex flex-col justify-center items-center text-center px-6 overflow-hidden">
-          {/* Parallax Background */}
-          <motion.img
-            style={{ y: backgroundY }}
-            src="https://picsum.photos/seed/hero-background/1920/1080"
-            alt="Hero background"
-            className="absolute inset-0 w-full h-full object-cover scale-105"
-          />
-
-          {/* Dark Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/20" />
-
-          {/* Hero Content */}
-          <motion.div
-            initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: 'easeOut' }}
-            className="relative z-10 max-w-3xl text-white"
-          >
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight drop-shadow-xl mb-6">
-              Redefine Your Style
-            </h1>
-            <p className="text-lg md:text-2xl mb-8 leading-relaxed drop-shadow">
-              Discover premium products crafted with modern elegance and innovation.
-            </p>
-            <motion.a
-              href="#products"
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.95 }}
-              className="inline-block px-8 py-4 bg-white/90 text-black rounded-full text-lg font-semibold shadow-lg backdrop-blur hover:bg-white transition-all duration-300"
-            >
-              Shop Now
-            </motion.a>
-          </motion.div>
-        </section>
-
-        {/* PRODUCTS GRID */}
-        <section
-          id="products"
-          className="container mx-auto px-4 sm:px-6 lg:px-8 py-20"
-        >
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="text-4xl font-bold text-center mb-12"
-          >
-            Our Featured Collection
-          </motion.h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
-            {products.map((product, idx) => (
+      {items.length === 0 ? (
+        <p className="text-center text-gray-500 text-lg">
+          Your cart is empty. Start shopping!
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          {/* Cart Items */}
+          <div className="lg:col-span-2 space-y-6">
+            {items.map((item) => (
               <motion.div
-                key={product.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.6, delay: idx * 0.1 }}
+                key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="flex flex-col md:flex-row items-center justify-between bg-white/70 backdrop-blur rounded-xl shadow-lg p-5 hover:shadow-xl transition-shadow"
               >
-                <ProductCard {...product} />
+                <div className="flex items-center space-x-4 w-full md:w-auto">
+                  {/* Product Image */}
+                  <img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="w-24 h-24 object-cover rounded-lg"
+                  />
+                  {/* Product Info */}
+                  <div>
+                    <h2 className="font-semibold text-lg">{item.name}</h2>
+                    <p className="text-gray-600">${item.price.toFixed(2)}</p>
+                  </div>
+                </div>
+
+                {/* Quantity & Actions */}
+                <div className="flex flex-col md:flex-row items-center md:space-x-6 mt-4 md:mt-0">
+                  {/* Quantity Selector */}
+                  <div className="flex items-center border rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => decreaseQty(item.id)}
+                      className="px-3 py-1 text-gray-600 hover:text-indigo-600 transition-colors"
+                    >
+                      <Minus size={16} />
+                    </button>
+                    <span className="px-4 py-1 text-gray-800">{item.quantity}</span>
+                    <button
+                      onClick={() => increaseQty(item.id)}
+                      className="px-3 py-1 text-gray-600 hover:text-indigo-600 transition-colors"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+
+                  {/* Remove Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.1, color: '#EF4444' }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => removeFromCart(item.id)}
+                    className="mt-3 md:mt-0 text-red-500 flex items-center space-x-1"
+                  >
+                    <Trash size={18} />
+                    <span>Remove</span>
+                  </motion.button>
+                </div>
               </motion.div>
             ))}
           </div>
-        </section>
-      </div>
-    </PageTransition>
+
+          {/* Order Summary */}
+          <div className="sticky top-24 bg-white/90 backdrop-blur-lg rounded-xl shadow-lg p-6 space-y-4">
+            <h2 className="text-2xl font-bold mb-4">Order Summary</h2>
+            <div className="flex justify-between text-gray-700">
+              <span>Items:</span>
+              <span>{items.length}</span>
+            </div>
+            <div className="flex justify-between text-gray-700">
+              <span>Total:</span>
+              <span className="font-medium text-lg">${totalPrice.toFixed(2)}</span>
+            </div>
+            <button className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+              Proceed to Checkout
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
-export default HomePage;
+export default CartPage;

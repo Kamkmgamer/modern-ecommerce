@@ -15,28 +15,36 @@ const products = Array.from({ length: 8 }, (_, i) => ({
 const HomePage: React.FC = () => {
   const { scrollY } = useScroll();
 
-  // Parallax effect: background y position changes slower than scroll
-  const backgroundY = useTransform(scrollY, [0, 500], [0, -150]);
+  // Parallax effect: background moves slower than scroll for depth
+  const backgroundY = useTransform(scrollY, [0, 500], [0, -100]);
+  // Text moves slightly slower than normal scroll for smooth parallax
+  const textY = useTransform(scrollY, [0, 500], [0, -50]);
 
   return (
     <PageTransition>
       <div className="bg-gradient-to-b from-gray-50 to-gray-100 text-gray-900">
 
         {/* HERO */}
-        <section className="relative h-screen flex flex-col justify-center items-center text-center px-6 overflow-hidden">
+        <section className="relative min-h-screen flex flex-col justify-center items-center text-center px-6 overflow-hidden">
           {/* Parallax Background */}
-          <motion.img
+          <motion.div
             style={{ y: backgroundY }}
-            src="https://picsum.photos/seed/hero-background/1920/1080"
-            alt="Hero background"
-            className="absolute inset-0 w-full h-full object-cover scale-105"
-          />
+            className="absolute inset-0 w-full h-full"
+          >
+            <img
+              src="https://picsum.photos/seed/hero-background/1920/1080"
+              alt="Hero background"
+              className="w-full h-full object-cover scale-105"
+              loading="eager"
+            />
+          </motion.div>
 
           {/* Dark Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/20 z-[1]" />
 
           {/* Hero Content */}
           <motion.div
+            style={{ y: textY }}
             initial={{ opacity: 0, y: 60 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: 'easeOut' }}
@@ -56,6 +64,22 @@ const HomePage: React.FC = () => {
             >
               Shop Now
             </motion.a>
+          </motion.div>
+
+          {/* Scroll Indicator */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.5, duration: 0.8 }}
+            className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10"
+          >
+            <motion.div
+              animate={{ y: [0, 10, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center"
+            >
+              <div className="w-1 h-3 bg-white/70 rounded-full mt-2"></div>
+            </motion.div>
           </motion.div>
         </section>
 
