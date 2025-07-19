@@ -1,13 +1,14 @@
 // src/pages/ProductDetailPage.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 
 const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
+  const [activeFeature, setActiveFeature] = useState(0);
 
-  // Main product data
+  // Product data
   const product = {
     name: `Product ${productId}`,
     price: 999.99,
@@ -19,7 +20,7 @@ const ProductDetailPage: React.FC = () => {
     bgImage: `https://picsum.photos/seed/${productId}-bg/1600/900`,
   };
 
-  // Feature images
+  // Features data
   const features = [
     {
       title: 'Ultra-Wide Display',
@@ -50,14 +51,11 @@ const ProductDetailPage: React.FC = () => {
     hoverSrc: `https://picsum.photos/seed/${productId}-gal${i}-alt/400/300`,
   }));
 
+  // Scroll animations
   const { scrollYProgress } = useScroll();
-
-  const sectionStart = 0.2;
-  const sectionEnd = 0.8;
-  const imageOpacity = useTransform(
-    scrollYProgress,
-    [sectionStart, sectionEnd],
-    [1, 0]
+  const imageScale = useSpring(
+    useTransform(scrollYProgress, [0, 0.2], [1, 1.1]),
+    { stiffness: 80, damping: 15 }
   );
 
   const handleAddToCart = () => {
@@ -89,7 +87,7 @@ const ProductDetailPage: React.FC = () => {
         <div className="absolute inset-0 bg-black/40" />
       </section>
 
-      {/* Sticky Feature Section with Fade */}
+      {/* Sticky Feature Layering */}
       <section
         className="relative bg-cover bg-center"
         style={{ backgroundImage: `url(${product.bgImage})` }}
@@ -99,32 +97,21 @@ const ProductDetailPage: React.FC = () => {
             {features.map((feat, idx) => (
               <motion.div
                 key={idx}
-                style={{
-                  opacity: useTransform(
-                    scrollYProgress,
-                    [
-                      sectionStart + idx * 0.15,
-                      sectionStart + (idx + 1) * 0.15,
-                    ],
-                    [1, 0]
-                  ),
-                  scale: useTransform(
-                    scrollYProgress,
-                    [
-                      sectionStart + idx * 0.15,
-                      sectionStart + (idx + 1) * 0.15,
-                    ],
-                    [1, 1.1]
-                  ),
+                initial={{ opacity: 0, y: 50 }}
+                animate={{
+                  opacity: activeFeature === idx ? 1 : 0,
+                  y: activeFeature === idx ? 0 : -50,
                 }}
-                className="absolute flex flex-col items-center"
+                transition={{ duration: 0.8 }}
+                className="absolute"
               >
-                <img
+                <motion.img
                   src={feat.imageUrl}
                   alt={feat.title}
+                  style={{ scale: imageScale }}
                   className="rounded-3xl shadow-2xl w-4/5 md:w-3/5 lg:w-2/5"
                 />
-                <div className="mt-6 text-center bg-black/30 rounded-2xl p-4 backdrop-blur-md">
+                <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-6 bg-black/30 rounded-3xl backdrop-blur-sm">
                   <h3 className="text-3xl md:text-4xl font-semibold text-white mb-2">
                     {feat.title}
                   </h3>
@@ -133,6 +120,17 @@ const ProductDetailPage: React.FC = () => {
                   </p>
                 </div>
               </motion.div>
+            ))}
+          </div>
+
+          {/* Feature Scroll Triggers */}
+          <div className="absolute top-0 left-0 w-full h-full">
+            {features.map((_, idx) => (
+              <div
+                key={idx}
+                className="h-[100vh] w-full"
+                onMouseEnter={() => setActiveFeature(idx)}
+              />
             ))}
           </div>
         </div>
