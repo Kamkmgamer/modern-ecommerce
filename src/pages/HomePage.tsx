@@ -1,4 +1,5 @@
-// src/pages/HomePage.tsx (updated)
+// src/pages/HomePage.tsx
+
 // ... imports
 import ProductCard from '../components/ProductCard';
 import PageTransition from '../components/PageTransition';
@@ -8,10 +9,12 @@ const products = Array.from({ length: 8 }, (_, i) => ({
   id: i + 1,
   name: `Modern Widget ${i + 1}`,
   price: 29.99 + i * 10,
-  imageUrl: `https://picsum.photos/seed/${i + 1}/400/300`,
+  // ✅ UPDATED: Use a more reliable placeholder image service
+  imageUrl: `https://picsum.photos/seed/${i + 547}/400/300`,
 }));
 
 const HomePage: React.FC = () => {
+  // ... the rest of the component remains the same
   return (
     <PageTransition>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
